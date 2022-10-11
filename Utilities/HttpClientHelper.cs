@@ -13,9 +13,9 @@ namespace Session2_1.Utilities
 
         private static readonly HttpClient Client = new();
 
-        private readonly String _baseUrl;
+        private readonly string _baseUrl;
 
-        public HttpClientHelper(String baseUrl)
+        public HttpClientHelper(string baseUrl)
         {
             _baseUrl = baseUrl;
         }
