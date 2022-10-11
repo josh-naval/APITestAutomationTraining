@@ -9,7 +9,7 @@ namespace Session2_1.Tests
     {
         private readonly static string baseUrl = "https://petstore.swagger.io/v2";
 
-        private static HttpClientHelper clientHelper;
+        private static RestSharpClientHelper clientHelper;
 
         private Pet _myPet;
 
@@ -17,7 +17,8 @@ namespace Session2_1.Tests
         public void Init()
         {
             clientHelper = new(baseUrl);
-            clientHelper.AddRequestHeaders("Accept", "application/json");
+            clientHelper.AddRequestParameters("Accept", "application/json");
+            clientHelper.AddRequestParameters("Content-Type", "application/json");
 
             string[] photoUrls = { "https://www.animalspot.net/great-potoo.html" };
 
@@ -32,30 +33,30 @@ namespace Session2_1.Tests
         }
 
         [TestCleanup]
-        public void CleanUp()
+        public async Task CleanUp()
         {
             if (_myPet != null)
-                clientHelper.DeleteRequest($"/pet/{_myPet.Id}");
+                await clientHelper.DeleteRequest($"/pet/{_myPet.Id}");
         }
 
         [TestMethod]
-        public void UpdatePet()
+        public async Task UpdatePet()
         {
             var newName = "Ghost Bird";
 
-            CreatePet();
+            await CreatePet();
 
             _myPet.Name = newName;
 
-            var updatedPet = clientHelper.PutRequest("/pet", _myPet);
+            var updatedPet = await clientHelper.PutRequest("/pet", _myPet);
 
             Assert.AreEqual(clientHelper.Response.StatusCode, HttpStatusCode.OK, "Verify Status Code is OK");
             Assert.AreEqual(updatedPet.Name, _myPet.Name, "Verify Pet Details Are Updated");
         }
 
-        private void CreatePet()
+        private async Task CreatePet()
         {
-            _myPet = clientHelper.PostRequest("/pet", _myPet);
+            _myPet = await clientHelper.PostRequest("/pet", _myPet);
             Assert.AreEqual(clientHelper.Response.StatusCode, HttpStatusCode.OK, "Verify Status Code is OK");
         }
 
