@@ -42,11 +42,7 @@ namespace Session2_1.Tests
         [TestMethod]
         public async Task VerifyCreatedPet()
         {
-            var newName = "Ghost Bird";
-
             await CreatePet();
-
-          
 
             var createdPet = await clientHelper.GetRequest<Pet>($"/pet/{_myPet.Id}", null);
 
