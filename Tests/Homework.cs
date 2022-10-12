@@ -40,18 +40,23 @@ namespace Session2_1.Tests
         }
 
         [TestMethod]
-        public async Task UpdatePet()
+        public async Task VerifyCreatedPet()
         {
             var newName = "Ghost Bird";
 
             await CreatePet();
 
-            _myPet.Name = newName;
+          
 
-            var updatedPet = await clientHelper.PutRequest("/pet", _myPet);
+            var createdPet = await clientHelper.GetRequest<Pet>($"/pet/{_myPet.Id}", null);
 
             Assert.AreEqual(clientHelper.Response.StatusCode, HttpStatusCode.OK, "Verify Status Code is OK");
-            Assert.AreEqual(updatedPet.Name, _myPet.Name, "Verify Pet Details Are Updated");
+            Assert.AreEqual(createdPet.Name, _myPet.Name, "Verify Pet Name Are Correct");
+            Assert.AreEqual(createdPet.Status, _myPet.Status, "Verify Pet Status Are Correct");
+            Assert.AreEqual(createdPet.Category.Name, _myPet.Category.Name, "Verify Pet Category Are Correct");
+            Assert.IsNotNull(createdPet.PhotoUrls.Select(url => url == _myPet.PhotoUrls[0]), "Verify Pet Photo Urls Are Correct");
+            Assert.IsNotNull(createdPet.Tags.Select(tag => tag.Name == _myPet.Tags[0].Name), "Verify Pet Tags Are Correct");
+
         }
 
         private async Task CreatePet()
