@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Session2_1.Model
 {
-    internal class Pet
+    public class Pet
     {
 
         [JsonProperty("id")]
