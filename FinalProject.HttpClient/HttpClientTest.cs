@@ -1,5 +1,6 @@
-﻿using FinalProject.RestfulBookerHerokuApp.Models;
-using FinalProject.RestfulBookerHerokuApp.Resources;
+﻿using FinalProject.HttpClient.Services;
+using FinalProject.RestfulBookerHerokuApp.Models;
+using FinalProject.RestfulBookerHerokuApp.TestData;
 using System.Net;
 
 namespace FinalProject.HttpClient
@@ -7,88 +8,62 @@ namespace FinalProject.HttpClient
     [TestClass]
     public class HttpClientTest : BaseTest
     {
-        private static BookingWrapper s_bookingWrapper;
-        private static string dateFormat = "yyyy-MM-dd";
+        private static Booking _booking;
 
+        private BookingService bookingService;
+        
         [TestInitialize]
         public void TestInit()
         {
-            if (s_bookingWrapper != null)
-                return;
-
-            s_bookingWrapper = new BookingWrapper()
-            {
-                Booking = new Booking()
-                {
-                    FirstName = "Rhaenyra",
-                    LastName = "Targaryen",
-                    TotalPrice = 8000,
-                    DepositPaid = true,
-                    BookingDates = new BookingDates()
-                    {
-                        CheckIn = DateTime.Today.ToString(dateFormat),
-                        CheckOut = DateTime.Today.AddDays(3).ToString(dateFormat)
-                    },
-                    AdditionalNeeds = "Buffet Package"
-                }
-            };
+            bookingService = new(InitializeHttpClient());
         }
+
 
         [TestMethod]
         public void A_CreateBooking()
         {
-            Booking booking = s_bookingWrapper.Booking;
-            var bookingWrapperResponse = httpClientHelper.PostRequest(Endpoints.CreateBooking, s_bookingWrapper);
-            var serverBookingDetails = httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(bookingWrapperResponse.BookingId.ToString()), null);
-            s_bookingWrapper = bookingWrapperResponse;
+            _booking = bookingService.CreateBooking(BookingGenerator.GetBookingData());
+            Assert.AreEqual(HttpStatusCode.OK, bookingService.GetResponse().StatusCode);
 
-            Assert.AreEqual(HttpStatusCode.OK, httpClientHelper.Response.StatusCode);
-            Assert.AreNotEqual(0, bookingWrapperResponse.BookingId);
-            AssertBookingDetails(booking, serverBookingDetails);
+            var serverBookingDetails = bookingService.GetBooking(_booking.BookingId.ToString());
+            Assert.AreEqual(HttpStatusCode.OK, bookingService.GetResponse().StatusCode);
+
+            Assert.AreNotEqual(0, _booking.BookingId);
+            AssertBookingDetails(_booking.BookingDetails, serverBookingDetails);
         }
 
         [TestMethod]
         public void B_UpdateBooking()
         {
-            Booking booking = s_bookingWrapper.Booking;
+            _booking = BookingGenerator.UpdateBookingData(_booking);
+             var bookingId = _booking.BookingId.ToString();
 
-            // Update data
-            booking.FirstName = "Alicent";
-            booking.LastName = "Hightower";
+            bookingService.UpdateBooking(_booking);
+            Assert.AreEqual(HttpStatusCode.OK, bookingService.GetResponse().StatusCode);
 
-            var bookingId = s_bookingWrapper.BookingId.ToString();
+            var serverBookingDetails = bookingService.GetBooking(bookingId);
+            Assert.AreEqual(HttpStatusCode.OK, bookingService.GetResponse().StatusCode);
 
-            httpClientHelper.AddRequestHeaders("Cookie", $"token={GetAuthToken()}");
-            httpClientHelper.PutRequest(Endpoints.UpdateBooking(bookingId), booking);
-            var response = httpClientHelper.Response;
-
-            // Get Updated
-            var serverBookingDetails = httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(bookingId), null);
-
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.AreNotEqual(0, bookingId);
-            AssertBookingDetails(booking, serverBookingDetails);
+            AssertBookingDetails(_booking.BookingDetails, serverBookingDetails);
 
         }
 
         [TestMethod]
         public void C_RemoveCreatedBookings()
         {
-            httpClientHelper.AddRequestHeaders("Cookie", $"token={GetAuthToken()}");
-            httpClientHelper.DeleteRequest(Endpoints.DeleteBooking(s_bookingWrapper.BookingId.ToString()));
-
-            Assert.AreEqual(HttpStatusCode.Created, httpClientHelper.Response.StatusCode);
+            bookingService.DeleteBooking(_booking.BookingId.ToString());
+            Assert.AreEqual(HttpStatusCode.Created, bookingService.GetResponse().StatusCode);
         }
 
         [TestMethod]
         public void D_GetRemovedCreatedBookings()
         {
-            httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(s_bookingWrapper.BookingId.ToString()), null);
-
-            Assert.AreEqual(HttpStatusCode.NotFound, httpClientHelper.Response.StatusCode);
+            var serverBookingDetails = bookingService.GetBooking(_booking.BookingId.ToString());
+            Assert.AreEqual(HttpStatusCode.NotFound, bookingService.GetResponse().StatusCode);
         }
 
-        private void AssertBookingDetails(Booking expectedBooking, Booking actualBooking)
+        private void AssertBookingDetails(BookingDetails expectedBooking, BookingDetails actualBooking)
         {
             Assert.AreEqual(expectedBooking.FirstName, actualBooking.FirstName);
             Assert.AreEqual(expectedBooking.LastName, actualBooking.LastName);

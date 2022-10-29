@@ -3,15 +3,15 @@ using System.Text;
 
 namespace FinalProject.WebServiceClients.NetHttpClient
 {
-    public class HttpClientHelper
+    public class HttpClientHelper: IClient
     {
         public Dictionary<string, string> RequestHeaders { get; set; }
 
-        public Dictionary<string, string> RequestOptions { get; set; }
+        public Dictionary<string, string> RequestParameters { get; set; }
 
-        public HttpResponseMessage Response { get; set; }
+        private static HttpClient _client = new();
 
-        private static readonly HttpClient Client = new();
+        private HttpResponseMessage _response;
 
         private readonly string _baseUrl;
 
@@ -27,11 +27,11 @@ namespace FinalProject.WebServiceClients.NetHttpClient
             RequestHeaders.Add(key, value);
         }
 
-        public void AddRequestOptions(string key, string value)
+        public void AddRequestParameters(string key, string value)
         {
-            RequestOptions ??= new Dictionary<string, string>();
+            RequestParameters ??= new Dictionary<string, string>();
 
-            RequestOptions.Add(key, value);
+            RequestParameters.Add(key, value);
         }
 
         private HttpRequestMessage SetRequestHeaders(HttpRequestMessage requestMessage)
@@ -44,7 +44,7 @@ namespace FinalProject.WebServiceClients.NetHttpClient
             return requestMessage;
         }
 
-        private T SendRequest<T>(HttpMethod httpMethod, Uri uri, T payload)
+        public T SendRequest<T>(HttpMethod httpMethod, Uri uri, T payload)
         {
             try
             {
@@ -57,27 +57,26 @@ namespace FinalProject.WebServiceClients.NetHttpClient
                 if (RequestHeaders != null)
                     requestMessage = SetRequestHeaders(requestMessage);
 
-
                 if (payload != null)
                 {
                     var body = JsonConvert.SerializeObject(payload, Formatting.Indented);
                     requestMessage.Content = new StringContent(body, Encoding.UTF8, "application/json");
 
-                    Response = Client.Send(requestMessage);
+                    _response = _client.Send(requestMessage);
 
-                    var responseContent = JsonConvert.DeserializeObject<T>(Response.Content.ReadAsStringAsync().Result);
+                    var responseContent = JsonConvert.DeserializeObject<T>(_response.Content.ReadAsStringAsync().Result);
 
                     return responseContent;
                 }
 
-                Response = Client.Send(requestMessage);
+                _response = _client.Send(requestMessage);
 
                 // WORK TO DO: Line 79
                 // Remarks: Temporary fix. probably need to remove deserilization from helper and just return the response
                 // which will cause a huge refactor on this code.
 
                 if (httpMethod == HttpMethod.Get || httpMethod == HttpMethod.Put)
-                    return JsonConvert.DeserializeObject<T>(Response.Content.ReadAsStringAsync().Result);
+                    return JsonConvert.DeserializeObject<T>(_response.Content.ReadAsStringAsync().Result);
 
                 return payload;
             }
@@ -106,6 +105,11 @@ namespace FinalProject.WebServiceClients.NetHttpClient
         public string DeleteRequest(string endPoint)
         {
             return SendRequest<string>(HttpMethod.Delete, new Uri($"{_baseUrl}{endPoint}"), null);
+        }
+
+        public HttpResponseMessage GetResponse()
+        {
+            return _response;
         }
     }
 }

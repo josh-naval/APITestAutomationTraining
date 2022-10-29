@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
 using RestSharp;
+using RestSharp.Serializers;
+using RestSharp.Serializers.NewtonsoftJson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,22 +10,22 @@ using System.Threading.Tasks;
 
 namespace FinalProject.WebServiceClients.RestSharp
 {
-    public class RestSharpClientHelper
+    public class RestSharpClientHelper: IClient
     {
+        private static RestClient _restClient = new ();
+
         public Dictionary<string, string> RequestHeaders { get; set; }
 
         public Dictionary<string, string> RequestParameters { get; set; }
 
         public RestResponse Response { get; set; }
 
-        private static RestClient restClient = new RestClient();
-
         private readonly string baseUrl;
 
         public RestSharpClientHelper(string baseUrl)
         {
             this.baseUrl = baseUrl;
-            restClient.UseDefaultSerializers();
+            _restClient.UseNewtonsoftJson();
         }
 
         public void AddRequestHeaders(string key, string value)
@@ -40,32 +42,32 @@ namespace FinalProject.WebServiceClients.RestSharp
             RequestParameters.Add(key, value);
         }
 
-        public async Task<T> GetRequest<T>(string endpoint, T? payload)
+        public T GetRequest<T>(string endpoint, T? payload)
         {
-            return await SendRequest(Method.Get, new Uri($"{baseUrl}{endpoint}"), payload);
+            return SendRequest(Method.Get, new Uri($"{baseUrl}{endpoint}"), payload);
         }
 
-        public async Task<T> PostRequest<T>(string endpoint, T? payload)
+        public T PostRequest<T>(string endpoint, T? payload)
         {
-            return await SendRequest(Method.Post, new Uri($"{baseUrl}{endpoint}"), payload);
+            return SendRequest(Method.Post, new Uri($"{baseUrl}{endpoint}"), payload);
         }
 
-        public async Task<T> PutRequest<T>(string endpoint, T? payload)
+        public T PutRequest<T>(string endpoint, T? payload)
         {
-            return await SendRequest(Method.Put, new Uri($"{baseUrl}{endpoint}"), payload);
+            return SendRequest(Method.Put, new Uri($"{baseUrl}{endpoint}"), payload);
         }
 
-        public async Task<T> PatchRequest<T>(string endpoint, T? payload)
+        public T PatchRequest<T>(string endpoint, T? payload)
         {
-            return await SendRequest(Method.Patch, new Uri($"{baseUrl}{endpoint}"), payload);
+            return SendRequest(Method.Patch, new Uri($"{baseUrl}{endpoint}"), payload);
         }
 
-        public async Task<RestResponse> DeleteRequest(string endpoint)
+        public string DeleteRequest(string endpoint)
         {
-            return await SendRequest<RestResponse>(Method.Delete, new Uri($"{baseUrl}{endpoint}"), null);
+            return SendRequest<string>(Method.Delete, new Uri($"{baseUrl}{endpoint}"), null);
         }
 
-        private async Task<T> SendRequest<T>(Method method, Uri uri, T? payload)
+        public T SendRequest<T>(Method method, Uri uri, T? payload)
         {
             var request = new RestRequest(uri, method);
             
@@ -81,9 +83,8 @@ namespace FinalProject.WebServiceClients.RestSharp
                 request.AddBody(requestBody);
             }
                
-
-            var response = await restClient.ExecuteAsync<T>(request);
-
+            var response = _restClient.Execute<T>(request);
+            
             Response = response;
 
             return response.Data!;
@@ -97,6 +98,11 @@ namespace FinalProject.WebServiceClients.RestSharp
             }
 
             return restRequest;
+        }
+
+        public HttpResponseMessage GetResponse()
+        {
+            throw new NotImplementedException();
         }
     }
 }

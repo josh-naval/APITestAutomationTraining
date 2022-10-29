@@ -27,8 +27,8 @@ namespace FinalProject.RestfulBookerHerokuApp.CustomConverters
 
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
-            var bookingWrapper = value as BookingWrapper;
-            var booking = bookingWrapper!.Booking;
+            var bookingWrapper = value as Booking;
+            var booking = bookingWrapper!.BookingDetails;
             serializer.Serialize(writer, booking);
 
         }

@@ -1,5 +1,8 @@
-﻿using FinalProject.RestfulBookerHerokuApp.Models;
+﻿using FinalProject.HttpClient.Services;
+using FinalProject.RestfulBookerHerokuApp.Models;
 using FinalProject.RestfulBookerHerokuApp.Resources;
+using FinalProject.RestfulBookerHerokuApp.TestData;
+using RestSharp;
 using System.Net;
 
 namespace FinalProject.RestSharpClient
@@ -7,88 +10,61 @@ namespace FinalProject.RestSharpClient
     [TestClass]
     public class RestSharpClientTest : BaseTest
     {
-        private static BookingWrapper s_bookingWrapper;
-        private static string dateFormat = "yyyy-MM-dd";
+        private static Booking _booking;
+
+        private BookingService bookingService;
 
         [TestInitialize]
         public void TestInit()
         {
-            if (s_bookingWrapper != null)
-                return;
-
-            s_bookingWrapper = new BookingWrapper()
-            {
-                Booking = new Booking()
-                {
-                    FirstName = "Rhaenyra",
-                    LastName = "Targaryen",
-                    TotalPrice = 8000,
-                    DepositPaid = true,
-                    BookingDates = new BookingDates()
-                    {
-                        CheckIn = DateTime.Today.ToString(dateFormat),
-                        CheckOut = DateTime.Today.AddDays(3).ToString(dateFormat)
-                    },
-                    AdditionalNeeds = "Buffet Package"
-                }
-            };
+            bookingService = new(InitializeRestSharpClient());
         }
 
         [TestMethod]
-        public async Task A_CreateBooking()
+        public void A_CreateBooking()
         {
-            Booking booking = s_bookingWrapper.Booking;
-            var bookingWrapperResponse = await restSharpClientHelper.PostRequest(Endpoints.CreateBooking, s_bookingWrapper);
-            var serverBookingDetails = await restSharpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(bookingWrapperResponse.BookingId.ToString()), null);
-            s_bookingWrapper = bookingWrapperResponse;
+            _booking = bookingService.CreateBooking(BookingGenerator.GetBookingData());
+            Assert.AreEqual(HttpStatusCode.OK, bookingService.GetRestResponse().StatusCode);
 
-            Assert.AreEqual(HttpStatusCode.OK, restSharpClientHelper.Response.StatusCode);
-            Assert.AreNotEqual(0, bookingWrapperResponse.BookingId);
-            AssertBookingDetails(booking, serverBookingDetails);
+            var serverBookingDetails = bookingService.GetBooking(_booking.BookingId.ToString());
+            Assert.AreEqual(HttpStatusCode.OK, bookingService.GetRestResponse().StatusCode);
+
+            Assert.AreNotEqual(0, _booking.BookingId);
+            AssertBookingDetails(_booking.BookingDetails, serverBookingDetails);
         }
 
         [TestMethod]
-        public async Task B_UpdateBooking()
+        public void B_UpdateBooking()
         {
-            Booking booking = s_bookingWrapper.Booking;
+            _booking = BookingGenerator.UpdateBookingData(_booking);
+            var bookingId = _booking.BookingId.ToString();
 
-            // Update data
-            booking.FirstName = "Alicent";
-            booking.LastName = "Hightower";
+            bookingService.UpdateBooking(_booking);
+            Assert.AreEqual(HttpStatusCode.OK, bookingService.GetRestResponse().StatusCode);
 
-            var bookingId = s_bookingWrapper.BookingId.ToString();
+            var serverBookingDetails = bookingService.GetBooking(bookingId);
+            Assert.AreEqual(HttpStatusCode.OK, bookingService.GetRestResponse().StatusCode);
 
-            restSharpClientHelper.AddRequestHeaders("Cookie", $"token={GetAuthToken()}");
-            await restSharpClientHelper.PutRequest(Endpoints.UpdateBooking(bookingId), booking);
-            var response = restSharpClientHelper.Response;
-
-            // Get Updated
-            var serverBookingDetails = await restSharpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(bookingId), null);
-
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.AreNotEqual(0, bookingId);
-            AssertBookingDetails(booking, serverBookingDetails);
+            AssertBookingDetails(_booking.BookingDetails, serverBookingDetails);
 
         }
 
         [TestMethod]
-        public async Task C_RemoveCreatedBookings()
+        public void C_RemoveCreatedBookings()
         {
-            restSharpClientHelper.AddRequestHeaders("Cookie", $"token={GetAuthToken()}");
-            await restSharpClientHelper.DeleteRequest(Endpoints.DeleteBooking(s_bookingWrapper.BookingId.ToString()));
-
-            Assert.AreEqual(HttpStatusCode.Created, restSharpClientHelper.Response.StatusCode);
+            bookingService.DeleteBooking(_booking.BookingId.ToString());
+            Assert.AreEqual(HttpStatusCode.Created, bookingService.GetRestResponse().StatusCode);
         }
 
         [TestMethod]
-        public async Task D_GetRemovedCreatedBookings()
+        public void D_GetRemovedCreatedBookings()
         {
-            await restSharpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(s_bookingWrapper.BookingId.ToString()), null);
-
-            Assert.AreEqual(HttpStatusCode.NotFound, restSharpClientHelper.Response.StatusCode);
+            var serverBookingDetails = bookingService.GetBooking(_booking.BookingId.ToString());
+            Assert.AreEqual(HttpStatusCode.NotFound, bookingService.GetRestResponse().StatusCode);
         }
 
-        private void AssertBookingDetails(Booking expectedBooking, Booking actualBooking)
+        private void AssertBookingDetails(BookingDetails expectedBooking, BookingDetails actualBooking)
         {
             Assert.AreEqual(expectedBooking.FirstName, actualBooking.FirstName);
             Assert.AreEqual(expectedBooking.LastName, actualBooking.LastName);
