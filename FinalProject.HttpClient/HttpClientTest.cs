@@ -38,11 +38,11 @@ namespace FinalProject.HttpClient
         public void A_CreateBooking()
         {
             Booking booking = s_bookingWrapper.Booking;
-            var bookingWrapperResponse = _httpClientHelper.PostRequest(Endpoints.CreateBooking, s_bookingWrapper);
-            var serverBookingDetails = _httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(bookingWrapperResponse.BookingId.ToString()), null);
+            var bookingWrapperResponse = httpClientHelper.PostRequest(Endpoints.CreateBooking, s_bookingWrapper);
+            var serverBookingDetails = httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(bookingWrapperResponse.BookingId.ToString()), null);
             s_bookingWrapper = bookingWrapperResponse;
 
-            Assert.AreEqual(HttpStatusCode.OK, _httpClientHelper.Response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.OK, httpClientHelper.Response.StatusCode);
             Assert.AreNotEqual(0, bookingWrapperResponse.BookingId);
             AssertBookingDetails(booking, serverBookingDetails);
         }
@@ -58,12 +58,12 @@ namespace FinalProject.HttpClient
 
             var bookingId = s_bookingWrapper.BookingId.ToString();
 
-            _httpClientHelper.AddRequestHeaders("Cookie", $"token={GetAuthToken()}");
-            _httpClientHelper.PutRequest(Endpoints.UpdateBooking(bookingId), booking);
-            var response = _httpClientHelper.Response;
+            httpClientHelper.AddRequestHeaders("Cookie", $"token={GetAuthToken()}");
+            httpClientHelper.PutRequest(Endpoints.UpdateBooking(bookingId), booking);
+            var response = httpClientHelper.Response;
 
             // Get Updated
-            var serverBookingDetails = _httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(bookingId), null);
+            var serverBookingDetails = httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(bookingId), null);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.AreNotEqual(0, bookingId);
@@ -74,18 +74,18 @@ namespace FinalProject.HttpClient
         [TestMethod]
         public void C_RemoveCreatedBookings()
         {
-            _httpClientHelper.AddRequestHeaders("Cookie", $"token={GetAuthToken()}");
-            _httpClientHelper.DeleteRequest(Endpoints.DeleteBooking(s_bookingWrapper.BookingId.ToString()));
+            httpClientHelper.AddRequestHeaders("Cookie", $"token={GetAuthToken()}");
+            httpClientHelper.DeleteRequest(Endpoints.DeleteBooking(s_bookingWrapper.BookingId.ToString()));
 
-            Assert.AreEqual(HttpStatusCode.Created, _httpClientHelper.Response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.Created, httpClientHelper.Response.StatusCode);
         }
 
         [TestMethod]
         public void D_GetRemovedCreatedBookings()
         {
-            _httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(s_bookingWrapper.BookingId.ToString()), null);
+            httpClientHelper.GetRequest<Booking>(Endpoints.GetBooking(s_bookingWrapper.BookingId.ToString()), null);
 
-            Assert.AreEqual(HttpStatusCode.NotFound, _httpClientHelper.Response.StatusCode);
+            Assert.AreEqual(HttpStatusCode.NotFound, httpClientHelper.Response.StatusCode);
         }
 
         private void AssertBookingDetails(Booking expectedBooking, Booking actualBooking)

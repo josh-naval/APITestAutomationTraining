@@ -7,12 +7,12 @@ namespace FinalProject
     [TestClass]
     public class BaseTest
     {
-        protected HttpClientHelper _httpClientHelper;
+        protected HttpClientHelper httpClientHelper;
 
         [TestInitialize]
         public void BaseClassInit()
         {
-            _httpClientHelper = InitializeHttpClient();
+            httpClientHelper = InitializeHttpClient();
         }
 
         protected HttpClientHelper InitializeHttpClient()
@@ -31,7 +31,7 @@ namespace FinalProject
                 Password = "password123"
             };
 
-            return _httpClientHelper.PostRequest(Endpoints.Auth, user).Token;
+            return httpClientHelper.PostRequest(Endpoints.Auth, user).Token;
         }
     }
 }
