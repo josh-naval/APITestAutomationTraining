@@ -1,4 +1,5 @@
-﻿using RestSharp;
+﻿using Newtonsoft.Json;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace FinalProject.WebServiceClients.RestSharp
         public RestSharpClientHelper(string baseUrl)
         {
             this.baseUrl = baseUrl;
+            restClient.UseDefaultSerializers();
         }
 
         public void AddRequestHeaders(string key, string value)
@@ -66,15 +68,19 @@ namespace FinalProject.WebServiceClients.RestSharp
         private async Task<T> SendRequest<T>(Method method, Uri uri, T? payload)
         {
             var request = new RestRequest(uri, method);
-
+            
             if (RequestHeaders != null)
                 request.AddHeaders(RequestHeaders);
 
             if (RequestParameters != null)
                 request = AddParameters(request);
 
-            if (payload != null)
-                request.AddBody(payload);
+            if (payload != null) 
+            {
+                var requestBody = JsonConvert.SerializeObject(payload, Formatting.Indented);
+                request.AddBody(requestBody);
+            }
+               
 
             var response = await restClient.ExecuteAsync<T>(request);
 
