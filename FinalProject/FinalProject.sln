@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FinalProject.WebServiceClie
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinalProject.RestSharpClient", "..\FinalProject.RestSharpClient\FinalProject.RestSharpClient.csproj", "{73DC488C-D92B-4F64-A3FE-D0229988C655}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinalProject.SoapClient", "..\FinalProject.SoapClient\FinalProject.SoapClient.csproj", "{1124C591-63E7-4DC9-9899-C11C85FB0BBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{73DC488C-D92B-4F64-A3FE-D0229988C655}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73DC488C-D92B-4F64-A3FE-D0229988C655}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73DC488C-D92B-4F64-A3FE-D0229988C655}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1124C591-63E7-4DC9-9899-C11C85FB0BBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1124C591-63E7-4DC9-9899-C11C85FB0BBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1124C591-63E7-4DC9-9899-C11C85FB0BBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1124C591-63E7-4DC9-9899-C11C85FB0BBC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
